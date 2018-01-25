@@ -1,0 +1,11 @@
+server {
+	listen 80;
+	listen [::]:80;
+
+	server_name memory.ironbeard.com;
+
+	location / {
+		proxy_pass http://localhost:5100;
+		#try_files $uri $uri/ =404;
+	}
+}
