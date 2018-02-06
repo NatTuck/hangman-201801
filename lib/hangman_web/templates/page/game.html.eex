@@ -1,0 +1,11 @@
+<div class="row">
+  <div class="col">
+    <h1>Hangman Game: <%= @game %></h1>
+    <script>
+      window.gameName = "<%= @game %>";
+    </script>
+    <div id="root">
+      <p>React app not loaded...</p>
+    </div>
+  </div>
+</div>

@@ -3,6 +3,7 @@ defmodule HangmanWeb.UserSocket do
 
   ## Channels
   # channel "room:*", HangmanWeb.RoomChannel
+  channel "games:*", HangmanWeb.GamesChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

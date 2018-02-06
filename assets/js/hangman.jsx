@@ -2,8 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Button } from 'reactstrap';
 
-export default function game_init(root) {
-  ReactDOM.render(<HangmanGame />, root);
+export default function game_init(root, channel) {
+  ReactDOM.render(<HangmanGame channel={channel} />, root);
 }
 
 // App state for Hangman is:
@@ -19,53 +19,38 @@ export default function game_init(root) {
 class HangmanGame extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      word: "elephant",
-      guesses: "",
-    };
+    this.channel = props.channel;
+    this.state = { skel: "", goods: [], bads: [], max: 10 };
+
+    this.channel.join()
+        .receive("ok", this.gotView.bind(this))
+        .receive("error", resp => { console.log("Unable to join", resp) });
   }
 
-  wordLetters() {
-    return this.state.word.split("");
+  gotView(view) {
+    console.log("New view", view);
+    this.setState(view.game);
   }
 
-  guessLetters() {
-    return _.uniq(this.state.guesses.split(""));
-  }
-
-  badGuessLetters() {
-    let goods = this.wordLetters();
-    let bads = [];
-    this.guessLetters().forEach( (gg) => {
-      if (!goods.includes(gg)) {
-        bads.push(gg);
-      }
-    });
-    return bads;
-  }
-
-  setGuesses(ev) {
-    let input = $(ev.target);
-    let st1 = _.extend(this.state, {
-      guesses: input.val(),
-    });
-    this.setState(st1);
+  sendGuess(ev) {
+    this.channel.push("guess", { letter: ev.key })
+        .receive("ok", this.gotView.bind(this));
   }
 
   render() {
     return (
       <div className="row">
         <div className="col-6">
-          <Word root={this} />
+          <Word state={this.state} />
         </div>
         <div className="col-6">
-          <Lives root={this} />
+          <Lives state={this.state} />
         </div>
         <div className="col-6">
-          <Guesses root={this} />
+          <Guesses state={this.state} />
         </div>
         <div className="col-6">
-          <GuessInput guess={this.setGuesses.bind(this)} />
+          <GuessInput guess={this.sendGuess.bind(this)} />
         </div>
       </div>
     );
@@ -73,12 +58,10 @@ class HangmanGame extends React.Component {
 }
 
 function Word(params) {
-  let root = params.root;
+  let state = params.state;
 
-  let guesses = root.guessLetters();
-  let letters = _.map(root.wordLetters(), (xx, ii) => {
-    let text = guesses.includes(xx) ? xx : "_";
-    return <span style={{padding: "1ex"}} key={ii}>{text}</span>;
+  let letters = _.map(state.skel, (xx, ii) => {
+    return <span style={{padding: "1ex"}} key={ii}>{xx}</span>;
   });
 
   return (
@@ -90,22 +73,26 @@ function Word(params) {
 }
 
 function Lives(params) {
+  let state = params.state;
+
   return <div>
     <p><b>Guesses Left:</b></p>
-    <p>{10 - params.root.badGuessLetters().length}</p>
+    <p>{state.max - state.bads.length}</p>
   </div>;
 }
 
 function Guesses(params) {
+  let state = params.state;
+
   return <div>
-    <p><b>Letters Guessed</b></p>
-    <p>{params.root.guessLetters().join(" ")}</p>
+    <p><b>Bad Guesses</b></p>
+    <p>{state.bads.join(" ")}</p>
   </div>;
 }
 
 function GuessInput(params) {
   return <div>
     <p><b>Type Your Guesses</b></p>
-    <p><input type="text" onChange={params.guess} /></p>
+    <p><input type="text" onKeyPress={params.guess} /></p>
   </div>;
 }
