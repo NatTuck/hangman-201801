@@ -5,7 +5,7 @@ defmodule HangmanWeb.GamesChannel do
 
   def join("games:" <> name, payload, socket) do
     if authorized?(payload) do
-      game = Game.new()
+      game = Hangman.GameBackup.load(name) || Game.new()
       socket = socket
       |> assign(:game, game)
       |> assign(:name, name)
@@ -19,6 +19,7 @@ defmodule HangmanWeb.GamesChannel do
   # by sending replies to requests from the client
   def handle_in("guess", %{"letter" => ll}, socket) do
     game = Game.guess(socket.assigns[:game], ll)
+    Hangman.GameBackup.save(socket.assigns[:name], game)
     socket = assign(socket, :game, game)
     {:reply, {:ok, %{ "game" => Game.client_view(game)}}, socket}
   end

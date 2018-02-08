@@ -12,6 +12,7 @@ defmodule Hangman.Application do
       supervisor(HangmanWeb.Endpoint, []),
       # Start your own worker by calling: Hangman.Worker.start_link(arg1, arg2, arg3)
       # worker(Hangman.Worker, [arg1, arg2, arg3]),
+      worker(Hangman.GameBackup, []),
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
